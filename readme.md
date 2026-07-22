@@ -28,16 +28,20 @@ This branch (`lan-480x320`) merges two things onto current `shufps/ESP-Miner-Ner
 
 ### Ethernet (W5500) wiring
 
-| Signal | GPIO | Notes |
+| Signal | GPIO | Wire it? |
 |---|---|---|
-| MOSI | 12 | |
-| MISO | 16 | |
-| SCLK | 2  | |
-| CS   | 21 | |
-| INT  | 11 | not required — driver works in polling mode too |
-| RST  | **4** | moved from the upstream default (GPIO13); GPIO13 is already used as `LDO_EN_PIN` on this board (see `main/boards/nerdqaxeplus.cpp`), so reusing it for W5500 reset would conflict with the board's power sequencing |
+| MOSI | 12 | yes |
+| MISO | 16 | yes |
+| SCLK | 2  | yes |
+| CS   | 21 | yes |
+| INT  | 11 | **no** — driver works in polling mode; leave unconnected |
+| RST  | 4  | **no** — leave unconnected, see below |
 
-MOSI/MISO/SCLK/CS/INT match the pinout documented in CryptoIceMLH's README, which appears to be a de facto community standard for W5500 add-on/interposer boards for these boards. **RST was changed to GPIO4 in firmware because of the GPIO13 conflict — if your specific W5500 add-on hardwires RST to GPIO13, that's a physical conflict no firmware change can fix**, and would need a hardware modification (bend/cut the pin and jump it to GPIO4) or confirmation from whoever built that add-on board about its actual wiring. Override point is `NerdQaxePlus2::getEthResetPin()` in `main/boards/nerdqaxeplus2.h` if a different pin is ever needed.
+MOSI/MISO/SCLK/CS match the pinout documented in CryptoIceMLH's README, which appears to be a de facto community standard for W5500 add-on/interposer boards for this hardware.
+
+**Don't wire RST.** The firmware still toggles GPIO4 as a belt-and-suspenders reset pulse on boot, but that's a firmware-internal detail, not something you need to route to the W5500 module — CryptoIceMLH's own driver never wires a reset pin at all (`phy_config.reset_gpio_num = -1`) and their README doesn't list one either, which only makes sense if these W5500 breakout modules reset themselves via their own onboard power-on-reset circuit. Leaving GPIO4 unconnected on the interposer is harmless: it just toggles a pin nothing is attached to, and the module resets itself the same way it would if the wire were there.
+
+(GPIO4 was chosen over the upstream default of GPIO13 because GPIO13 is already used as `LDO_EN_PIN` on this board — see `main/boards/nerdqaxeplus.cpp` — moot for wiring purposes now that RST isn't being wired at all, but worth knowing if a future board revision ever needs it. Override point is `NerdQaxePlus2::getEthResetPin()` in `main/boards/nerdqaxeplus2.h`.)
 
 ### Building this fork
 
