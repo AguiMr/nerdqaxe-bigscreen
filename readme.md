@@ -13,6 +13,47 @@ Credits to the devs:
 - BitAxe devs on OSMU: @skot/ESP-Miner, @ben and @jhonny
 - NerdAxe dev @BitMaker
 
+## About this fork
+
+This branch (`lan-480x320`) merges two things onto current `shufps/ESP-Miner-NerdQAxePlus` (`develop`) for the **NerdQAxePlus2 with a 480x320 (3.5") screen**:
+
+1. **480x320 display support**, ported from [brunneis/nerdqaxeplus2-3.5-inches](https://github.com/brunneis/nerdqaxeplus2-3.5-inches). Upstream (`shufps`) doesn't support this panel and has said they won't, due to concerns about the Chinese manufacturer of the 480x320 variant — this is a community-maintained addition, not something expected to land upstream.
+2. **W5500 Ethernet**, enabled via upstream's own native `Board::hasEthernet()` / `NetworkManager` infrastructure (originally built for the Q1370/Q1373 boards). No code was pulled in from [CryptoIceMLH/ESP-Miner-NerdQAxePlusLAN](https://github.com/CryptoIceMLH/ESP-Miner-NerdQAxePlusLAN) — upstream's own implementation is more current — but that project's README confirmed the community-standard SPI pinout used below.
+
+### Status
+
+- ✅ Builds clean for `BOARD=NERDQAXEPLUS2`, target `esp32s3`, with `BIGSCREEN=1`.
+- ⚠️ **`main/displays/ui.cpp` has not been adapted for the bigger canvas.** It's SquareLine-Studio-generated layout code written for the 320x170 screen; the UI will currently render using those old coordinates on the 480x320 panel instead of filling it. This needs to be done by iterating against a real device, not guessed from source.
+- ⚠️ **Ethernet pinout is source-verified, not hardware-verified.** See below.
+
+### Ethernet (W5500) wiring
+
+| Signal | GPIO | Notes |
+|---|---|---|
+| MOSI | 12 | |
+| MISO | 16 | |
+| SCLK | 2  | |
+| CS   | 21 | |
+| INT  | 11 | not required — driver works in polling mode too |
+| RST  | **4** | moved from the upstream default (GPIO13); GPIO13 is already used as `LDO_EN_PIN` on this board (see `main/boards/nerdqaxeplus.cpp`), so reusing it for W5500 reset would conflict with the board's power sequencing |
+
+MOSI/MISO/SCLK/CS/INT match the pinout documented in CryptoIceMLH's README, which appears to be a de facto community standard for W5500 add-on/interposer boards for these boards. **RST was changed to GPIO4 in firmware because of the GPIO13 conflict — if your specific W5500 add-on hardwires RST to GPIO13, that's a physical conflict no firmware change can fix**, and would need a hardware modification (bend/cut the pin and jump it to GPIO4) or confirmation from whoever built that add-on board about its actual wiring. Override point is `NerdQaxePlus2::getEthResetPin()` in `main/boards/nerdqaxeplus2.h` if a different pin is ever needed.
+
+### Building this fork
+
+Same as below, with two additions: set `BIGSCREEN=1` to get the 480x320 display code, and note the board is always `NERDQAXEPLUS2`.
+
+```bash
+export BOARD="NERDQAXEPLUS2"
+export BIGSCREEN=1
+./docker/idf.sh set-target esp32s3
+./docker/idf.sh build
+```
+
+### Flashing
+
+**The partition table was changed** (app partitions enlarged, `www` shrunk) to fit the larger 480x320 theme assets — see `partitions.csv`. This means the **first flash of this firmware must be a full serial flash** (`idf.py flash`, `bitaxetool`, or the merge_bin scripts below), not an OTA update from an existing NerdQAxePlus2 firmware, since OTA doesn't repartition the flash.
+
 
 ## How to flash/update firmware
 
