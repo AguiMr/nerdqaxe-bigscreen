@@ -19,7 +19,6 @@
 #define PIN_BUTTON_2 (gpio_num_t) 0  // Button 2 GPIO pin
 
 // Display settings
-#define TDISPLAYS3_LCD_PIXEL_CLOCK_HZ (6528000)                             // Pixel clock for LCD in Hz (60 FPS, 170 x 320 pixels)
 #define TDISPLAYS3_LCD_BK_LIGHT_ON_LEVEL 1                                  // Backlight ON level (1: ON, 0: OFF)
 #define TDISPLAYS3_LCD_BK_LIGHT_OFF_LEVEL !TDISPLAYS3_LCD_BK_LIGHT_ON_LEVEL // Backlight OFF level
 
@@ -42,10 +41,26 @@
 #define TDISPLAYS3_PIN_NUM_RST (gpio_num_t) 5       // LCD reset pin
 #define TDISPLAYS3_PIN_NUM_BK_LIGHT (gpio_num_t) 38 // LCD backlight control pin
 
-// LCD resolution and buffer size
-#define TDISPLAYS3_LCD_H_RES 320                                            // Horizontal resolution
-#define TDISPLAYS3_LCD_V_RES 170                                            // Vertical resolution
-#define LVGL_LCD_BUF_SIZE (TDISPLAYS3_LCD_H_RES * TDISPLAYS3_LCD_V_RES) / 4 // Buffer size for display
+// LCD resolution and buffer size - configurable for different display sizes
+#ifdef BIGSCREEN_480x320
+    // 480x320 big screen configuration
+    #define TDISPLAYS3_LCD_H_RES 480 // Horizontal resolution
+    #define TDISPLAYS3_LCD_V_RES 320 // Vertical resolution
+    #define LVGL_LCD_BUF_SIZE (TDISPLAYS3_LCD_H_RES * TDISPLAYS3_LCD_V_RES) / 6 // Buffer size for display
+    #define TDISPLAYS3_LCD_PIXEL_CLOCK_HZ (TDISPLAYS3_LCD_H_RES * TDISPLAYS3_LCD_V_RES * 80) // Pixel clock for 480x320
+    #define TDISPLAYS3_ENABLE_SCALING 1  // Enable content scaling
+    #define TDISPLAYS3_SCALE_FACTOR 3.0f // Scale factor for larger display
+    #define TDISPLAYS3_ZOOM_LEVEL (uint16_t) (256 * TDISPLAYS3_SCALE_FACTOR) // For compatibility
+#else
+    // Default 320x170 standard screen configuration
+    #define TDISPLAYS3_LCD_H_RES 320                                            // Horizontal resolution
+    #define TDISPLAYS3_LCD_V_RES 170                                            // Vertical resolution
+    #define LVGL_LCD_BUF_SIZE (TDISPLAYS3_LCD_H_RES * TDISPLAYS3_LCD_V_RES) / 4 // Buffer size for display
+    #define TDISPLAYS3_LCD_PIXEL_CLOCK_HZ (6528000)                             // Pixel clock for 320x170 (60 FPS)
+    #define TDISPLAYS3_ENABLE_SCALING 0  // No scaling for standard display
+    #define TDISPLAYS3_SCALE_FACTOR 1.0f // No scaling
+    #define TDISPLAYS3_ZOOM_LEVEL 256    // Standard zoom
+#endif
 
 // Bit sizes for LCD commands and parameters
 #define TDISPLAYS3_LCD_CMD_BITS 8   // Bits for LCD commands
