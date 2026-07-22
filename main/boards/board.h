@@ -348,6 +348,12 @@ public:
         return false;
     }
 
+    // W5500 reset GPIO. Default matches the TNA/Q1370 reference wiring;
+    // override on boards where GPIO13 is already claimed for something else.
+    virtual int getEthResetPin() {
+        return 13;
+    }
+
     virtual bool hasCanExtension() {
         return false;
     }

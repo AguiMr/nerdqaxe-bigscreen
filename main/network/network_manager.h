@@ -63,6 +63,11 @@ class NetworkManager {
         return !m_apShutdownDone;
     }
 
+    void setEthResetPin(gpio_num_t pin)
+    {
+        m_eth.setResetPin(pin);
+    }
+
     void earlyEthSpiInit()
     {
         m_eth.earlySpiInit();

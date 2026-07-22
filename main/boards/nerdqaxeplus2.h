@@ -21,4 +21,14 @@ class NerdQaxePlus2 : public NerdQaxePlus {
     bool setVoltage(float core_voltage) override;
     float getTemperature(int index);
     void requestChipTemps() override;
+
+    // Optional W5500 add-on (LAN). GPIO13 is already used as LDO_EN_PIN on
+    // this board, so the reset line is moved to GPIO4 (verify against the
+    // physical wiring before relying on this).
+    bool hasEthernet() override {
+        return true;
+    }
+    int getEthResetPin() override {
+        return 4;
+    }
 };

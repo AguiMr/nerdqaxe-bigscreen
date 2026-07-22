@@ -15,6 +15,13 @@ class W5500 {
     /* Call once after esp_netif_init() + esp_event_loop_create_default() */
     esp_err_t init();
 
+    /* Call before earlySpiInit() to override the reset pin on boards where
+       the default (GPIO13) is already in use. */
+    void setResetPin(gpio_num_t pin)
+    {
+        m_pinRst = pin;
+    }
+
     void setHookLinkUp(W5500HookFn fn)
     {
         m_hookLinkUp = fn;
