@@ -275,6 +275,7 @@ extern "C" void app_main(void)
     // initialize everything non-asic-specific like
     // fan and serial and load settings from nvs
     if (board->hasEthernet()) {
+        NETWORK.setEthResetPin((gpio_num_t) board->getEthResetPin());
         NETWORK.earlyEthSpiInit();
     }
 
