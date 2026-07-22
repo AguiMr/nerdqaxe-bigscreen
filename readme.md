@@ -28,20 +28,16 @@ This branch (`lan-480x320`) merges two things onto current `shufps/ESP-Miner-Ner
 
 ### Ethernet (W5500) wiring
 
-| Signal | GPIO | Wire it? |
-|---|---|---|
-| MOSI | 12 | yes |
-| MISO | 16 | yes |
-| SCLK | 2  | yes |
-| CS   | 21 | yes |
-| INT  | 11 | **no** — driver works in polling mode; leave unconnected |
-| RST  | 4  | **no** — leave unconnected, see below |
+Only 4 signal wires needed, matching the community-standard pinout from CryptoIceMLH's README (plus power/ground):
 
-MOSI/MISO/SCLK/CS match the pinout documented in CryptoIceMLH's README, which appears to be a de facto community standard for W5500 add-on/interposer boards for this hardware.
+| Signal | GPIO |
+|---|---|
+| MOSI | 12 |
+| MISO | 16 |
+| SCLK | 2  |
+| CS   | 21 |
 
-**Don't wire RST.** The firmware still toggles GPIO4 as a belt-and-suspenders reset pulse on boot, but that's a firmware-internal detail, not something you need to route to the W5500 module — CryptoIceMLH's own driver never wires a reset pin at all (`phy_config.reset_gpio_num = -1`) and their README doesn't list one either, which only makes sense if these W5500 breakout modules reset themselves via their own onboard power-on-reset circuit. Leaving GPIO4 unconnected on the interposer is harmless: it just toggles a pin nothing is attached to, and the module resets itself the same way it would if the wire were there.
-
-(GPIO4 was chosen over the upstream default of GPIO13 because GPIO13 is already used as `LDO_EN_PIN` on this board — see `main/boards/nerdqaxeplus.cpp` — moot for wiring purposes now that RST isn't being wired at all, but worth knowing if a future board revision ever needs it. Override point is `NerdQaxePlus2::getEthResetPin()` in `main/boards/nerdqaxeplus2.h`.)
+INT and RST aren't wired — the driver polls instead of using an interrupt, and these W5500 breakout modules reset themselves on power-up. (Firmware still pulses GPIO4 as a no-op reset attempt on boot; harmless if unconnected, and overridable via `NerdQaxePlus2::getEthResetPin()` if a future board ever needs it wired.)
 
 ### Building this fork
 
