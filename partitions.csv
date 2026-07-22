@@ -1,10 +1,13 @@
 # Name,      Type, SubType,   Offset,    Size, Flags
 # Note: if you have increased the bootloader size, make sure to update the offsets to avoid overlap
+# App partitions are enlarged (vs. the 4M upstream default) to fit the larger
+# 480x320 theme image assets (BIGSCREEN_480x320); www is shrunk from 3M since
+# the actual axe-os build is ~1.7M — see README for details.
 nvs,         data, nvs,       0x9000,    0x6000
 phy_init,    data, phy,       0xf000,    0x1000
-factory,     app,  factory,   0x10000,   4M
-www,         data, spiffs,    0x410000,  3M
-ota_0,       app,  ota_0,     0x710000,  4M
-ota_1,       app,  ota_1,     0xb10000,  4M
-otadata,     data, ota,       0xf10000,  8k
+factory,     app,  factory,   0x10000,   0x490000
+www,         data, spiffs,    0x4a0000,  0x200000
+ota_0,       app,  ota_0,     0x6a0000,  0x490000
+ota_1,       app,  ota_1,     0xb30000,  0x490000
+otadata,     data, ota,       0xfc0000,  8k
 coredump,    data, coredump,          ,  64K

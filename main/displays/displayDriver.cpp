@@ -784,7 +784,11 @@ lv_obj_t *DisplayDriver::initTDisplayS3(void)
     }
 
     // the gap is LCD panel specific, even panels with the same driver IC, can have different gap value
+#ifdef BIGSCREEN_480x320
+    esp_lcd_panel_set_gap(panel_handle, 0, 0);
+#else
     esp_lcd_panel_set_gap(panel_handle, 0, 35);
+#endif
 
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
