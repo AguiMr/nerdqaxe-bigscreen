@@ -19,8 +19,10 @@
 
 static const char *TAG_ETH = "w5500";
 
+// INT is intentionally left unwired (see README) — this board always runs
+// the W5500 in polling mode, never interrupt-driven.
 #ifndef W5500_USE_INT
-#define W5500_USE_INT 1
+#define W5500_USE_INT 0
 #endif
 
 W5500::W5500()
@@ -200,7 +202,7 @@ esp_err_t W5500::earlySpiInit()
     w5500_config.int_gpio_num = m_pinInt;
 #else
     w5500_config.int_gpio_num = -1;
-    w5500_config.poll_period_ms = 1;
+    w5500_config.poll_period_ms = 10;
 #endif
 
     esp_eth_mac_t *mac = esp_eth_mac_new_w5500(&w5500_config, &mac_config);
