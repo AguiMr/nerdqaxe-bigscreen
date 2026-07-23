@@ -19,15 +19,16 @@
 #include "macros.h"
 #include "psram_allocator.h"
 
-#define GITHUB_REPO "https://github.com/shufps/"
+#define GITHUB_REPO "https://github.com/AguiMr/"
 
+// Must match the "factory" and "www" partition offsets/sizes in
+// partitions.csv (enlarged vs. upstream default for BIGSCREEN_480x320
+// assets) and merge_bin.sh's WWW_BIN_ADDR.
 #define FW_START 0x10000
-#define FW_LEN_MB 4
-#define FW_LEN_BYTES (FW_LEN_MB * 1024 * 1024)
+#define FW_LEN_BYTES 0x490000
 
-#define WWW_START 0x410000
-#define WWW_LEN_MB 3
-#define WWW_LEN_BYTES (WWW_LEN_MB * 1024 * 1024)
+#define WWW_START 0x4a0000
+#define WWW_LEN_BYTES 0x200000
 
 #define CHUNK_SIZE 2048
 #define URL_SIZE 4096 // make this big to avoid truncation
