@@ -777,11 +777,19 @@ lv_obj_t *DisplayDriver::initTDisplayS3(void)
     esp_lcd_panel_swap_xy(panel_handle, true);
 
     Board *board = SYSTEM_MODULE.getBoard();
+#ifdef BIGSCREEN_480x320
+    // Single-axis mirror (below) produces a mirror-image reflection on this
+    // panel instead of a true rotation. Mirroring both axes together (or
+    // neither) is a proper 180-degree rotation instead.
+    bool flip_screen = board->isFlipScreenEnabled();
+    esp_lcd_panel_mirror(panel_handle, flip_screen, flip_screen);
+#else
     if (!board->isFlipScreenEnabled()) {
         esp_lcd_panel_mirror(panel_handle, true, false);
     } else {
         esp_lcd_panel_mirror(panel_handle, false, true);
     }
+#endif
 
     // the gap is LCD panel specific, even panels with the same driver IC, can have different gap value
 #ifdef BIGSCREEN_480x320
