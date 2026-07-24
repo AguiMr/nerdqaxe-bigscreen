@@ -413,6 +413,11 @@ void UI::miningScreenInit(void)
     ui_imgNet = lv_img_create(ui_MiningScreen);
     lv_img_set_src(ui_imgNet, &ui_img_wifi_png);  // default
 
+    // lv_obj_set_width/height would just stretch the object's clip box, not
+    // resample the image, and tiles the source pixels. Zoom actually scales
+    // the pixel content; identity (256) on the default 320x170 screen.
+    lv_img_set_zoom(ui_imgNet, (lv_coord_t) (256.0f * ((float) TDISPLAYS3_LCD_H_RES / 320.0f)));
+
     lv_obj_set_x(ui_imgNet, scale_x(41+7));
     lv_obj_set_y(ui_imgNet, scale_y(-83+7));
     lv_obj_set_align(ui_imgNet, LV_ALIGN_CENTER);
