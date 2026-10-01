@@ -202,7 +202,7 @@ esp_err_t W5500::earlySpiInit()
     w5500_config.int_gpio_num = m_pinInt;
 #else
     w5500_config.int_gpio_num = -1;
-    w5500_config.poll_period_ms = 10;
+    w5500_config.poll_period_ms = 3; // tighter polling for lower, steadier RX latency
 #endif
 
     esp_eth_mac_t *mac = esp_eth_mac_new_w5500(&w5500_config, &mac_config);
