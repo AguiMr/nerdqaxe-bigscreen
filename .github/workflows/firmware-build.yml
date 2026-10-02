@@ -1,0 +1,29 @@
+name: Firmware build
+
+# Compile-checks the firmware so pull requests (including the automated
+# upstream-sync PRs) get a green/red before anyone merges or flashes.
+# Builds the NerdQAxePlus2 / 480x320 target only — the config this fork ships.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: idf.py build (NERDQAXEPLUS2, BIGSCREEN)
+    runs-on: ubuntu-latest
+    container: espressif/idf:release-v5.3   # project requires ESP-IDF >= 5.3.x
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build
+        shell: bash
+        run: |
+          git config --global --add safe.directory '*'   # idf.py reads git version
+          . "$IDF_PATH/export.sh"
+          export BOARD=NERDQAXEPLUS2 BIGSCREEN=1
+          idf.py build

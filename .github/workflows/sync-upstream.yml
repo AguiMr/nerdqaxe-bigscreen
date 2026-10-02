@@ -1,0 +1,97 @@
+name: Sync upstream (shufps/develop)
+
+# Keeps this fork current with upstream WITHOUT ever touching main directly.
+# Weekly (and on-demand) it checks shufps/ESP-Miner-NerdQAxePlus develop:
+#   - clean merge  -> pushes a sync branch and opens a PR (compile-checked by
+#                     the Firmware build workflow) for you to review + flash
+#   - conflicts    -> opens an issue listing what needs manual resolution
+# It never merges to main and never flashes anything — a human stays in the loop.
+on:
+  schedule:
+    - cron: '17 6 * * 1'     # Mondays ~06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git + add upstream
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/shufps/ESP-Miner-NerdQAxePlus.git
+          git fetch --no-tags upstream develop
+
+      - name: Check upstream and attempt merge
+        id: m
+        run: |
+          BEHIND=$(git rev-list --count HEAD..upstream/develop)
+          UP=$(git rev-parse --short upstream/develop)
+          BRANCH="sync/upstream-$UP"
+          echo "behind=$BEHIND" >> "$GITHUB_OUTPUT"
+          echo "up=$UP"         >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          if [ "$BEHIND" -eq 0 ]; then
+            echo "status=uptodate" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "status=exists" >> "$GITHUB_OUTPUT"; exit 0; fi
+
+          git checkout -b "$BRANCH"
+          if git merge --no-edit upstream/develop; then
+            echo "status=clean" >> "$GITHUB_OUTPUT"
+          else
+            git merge --abort
+            echo "status=conflict" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open PR (clean merge)
+        if: steps.m.outputs.status == 'clean'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push -u origin "${{ steps.m.outputs.branch }}"
+          printf '%s\n' \
+            "Automated clean merge of upstream \`shufps/develop\` @ \`${{ steps.m.outputs.up }}\` (${{ steps.m.outputs.behind }} commits ahead)." \
+            "" \
+            "The **Firmware build** workflow will compile-check this PR." \
+            "" \
+            "⚠️ Review the diff and wait for the green build, then merge, build, and **flash + test on the device** before trusting it." \
+            > body.md
+          gh pr create --base main --head "${{ steps.m.outputs.branch }}" \
+            --title "Sync upstream shufps/develop (+${{ steps.m.outputs.behind }} commits)" \
+            --body-file body.md
+
+      - name: Open issue (merge conflict)
+        if: steps.m.outputs.status == 'conflict'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="Upstream sync needs manual merge (+${{ steps.m.outputs.behind }} @ ${{ steps.m.outputs.up }})"
+          # don't spam: skip if an open issue already names this upstream sha
+          if gh issue list --state open --search "${{ steps.m.outputs.up }} in:title" | grep -q .; then
+            echo "issue already open for this upstream sha"; exit 0; fi
+          printf '%s\n' \
+            "Upstream \`shufps/develop\` is ${{ steps.m.outputs.behind }} commits ahead (@ \`${{ steps.m.outputs.up }}\`), but the automatic merge conflicts and needs manual resolution." \
+            "" \
+            "Resolve locally:" \
+            '```bash' \
+            "git fetch upstream" \
+            "git merge upstream/develop   # fix conflicts" \
+            "idf.py build                 # verify it compiles" \
+            '```' \
+            > issue.md
+          gh issue create --title "$TITLE" --body-file issue.md
+
+      - name: Summary
+        run: echo "status=${{ steps.m.outputs.status }} behind=${{ steps.m.outputs.behind }} upstream=${{ steps.m.outputs.up }}"
