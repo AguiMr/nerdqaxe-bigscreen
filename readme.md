@@ -37,6 +37,10 @@ Only 4 signal wires needed, matching the community-standard pinout from CryptoIc
 | SCLK | 2  |
 | CS   | 21 |
 
+![W5500 shield wiring — 20×14 perfboard, front and back](board.png)
+
+*The W5500 module is drawn on top for reference only; it actually mounts on the opposite side of the board. The 12-pin pass-through header is where the NerdQAxe++ (ESP32) plugs in; the W5500 sits on the 5-pin headers.*
+
 INT and RST aren't wired — the driver polls instead of using an interrupt, and these W5500 breakout modules reset themselves on power-up. (Firmware still pulses GPIO4 as a no-op reset attempt on boot; harmless if unconnected, and overridable via `NerdQaxePlus2::getEthResetPin()` if a future board ever needs it wired.)
 
 ### Building this fork
