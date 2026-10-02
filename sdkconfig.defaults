@@ -80,6 +80,14 @@ CONFIG_ESP_TASK_WDT_INIT=n
 # enable w5500
 CONFIG_ETH_SPI_ETHERNET_W5500=y
 
+# This board mines over Ethernet (WiFi is only used for setup/fallback), so WiFi
+# code doesn't need to live in IRAM. Moving it to flash frees ~30kB of IRAM and
+# keeps the 480x320 build under the iram0_0_seg limit on a *clean* build — the
+# committed sdkconfig fit only because of cached managed_components; a fresh
+# build (CI or new clone) would otherwise overflow IRAM by a few kB.
+CONFIG_ESP_WIFI_IRAM_OPT=n
+CONFIG_ESP_WIFI_RX_IRAM_OPT=n
+
 # debugging
 CONFIG_HEAP_POISONING_COMPREHENSIVE=y
 CONFIG_COMPILER_STACK_CHECK_MODE_STRONG=y
