@@ -16,7 +16,10 @@ jobs:
   build:
     name: idf.py build (NERDQAXEPLUS2, BIGSCREEN)
     runs-on: ubuntu-latest
-    container: espressif/idf:release-v5.3   # project requires ESP-IDF >= 5.3.x
+    # Pinned to 5.3.3 to match the toolchain this fork actually builds/flashes
+    # with (docker/ esp-idf-builder). Newer 5.3.x (e.g. 5.3.6) uses more IRAM
+    # and the 480x320 build overflows IRAM by a few KB — see README / tracking.
+    container: espressif/idf:v5.3.3
     steps:
       - name: Checkout (with submodules)
         uses: actions/checkout@v4
