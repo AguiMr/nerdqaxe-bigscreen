@@ -43,4 +43,5 @@ jobs:
           git config --global --add safe.directory '*'   # idf.py reads git version
           . "$IDF_PATH/export.sh"
           export BOARD=NERDQAXEPLUS2 BIGSCREEN=1
+          idf.py set-target esp32s3
           idf.py build
