@@ -1,0 +1,95 @@
+name: Firmware release
+
+# Builds the firmware and publishes a GitHub Release whose assets match what
+# the in-app "Update via GitHub" expects (and the manual web-UI upload):
+#   - esp-miner-factory-NerdQAxe++-<tag>.bin  (full 0x0 image; in-app updater + USB)
+#   - esp-miner-NerdQAxe++.bin                (app only; web-UI firmware upload / OTA)
+#   - www.bin                                 (web UI; web-UI website upload / OTA-www)
+#
+# Cut a release by pushing a version tag, e.g.:  git tag v1.1.1 && git push origin v1.1.1
+# A manual run (workflow_dispatch) builds + merges but does NOT publish.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & publish (NerdQAxe++ / 480x320)
+    runs-on: ubuntu-latest
+    container: espressif/idf:v5.3.3
+    steps:
+      - name: Checkout (full history for git-describe version)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Node (Angular web UI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build web UI
+        working-directory: main/http_server/axe-os
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build firmware
+        shell: bash
+        run: |
+          git config --global --add safe.directory '*'
+          . "$IDF_PATH/export.sh"
+          export BOARD=NERDQAXEPLUS2 BIGSCREEN=1
+          idf.py build
+
+      - name: Package release binaries
+        id: pkg
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          git config --global --add safe.directory '*'
+          # Tag on a tag push; on manual runs fall back to a dev label (won't publish).
+          TAG="${GITHUB_REF_NAME}"
+          case "$GITHUB_REF" in refs/tags/*) ;; *) TAG="dev-$(git rev-parse --short HEAD)";; esac
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          FACTORY="esp-miner-factory-NerdQAxe++-${TAG}.bin"
+          esptool.py --chip esp32s3 merge_bin \
+            --flash_mode dio --flash_size 16MB --flash_freq 80m \
+            0x0      build/bootloader/bootloader.bin \
+            0x8000   build/partition_table/partition-table.bin \
+            0x10000  build/esp-miner.bin \
+            0x4a0000 build/www.bin \
+            0xfc0000 build/ota_data_initial.bin \
+            -o "$FACTORY"
+
+          cp build/esp-miner.bin "esp-miner-NerdQAxe++.bin"   # app-only (OTA / manual firmware upload)
+          cp build/www.bin       "www.bin"                    # web UI (OTA-www / manual website upload)
+          ls -la "$FACTORY" "esp-miner-NerdQAxe++.bin" www.bin
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            esp-miner-factory-NerdQAxe++-${{ steps.pkg.outputs.tag }}.bin
+            esp-miner-NerdQAxe++.bin
+            www.bin
+          body: |
+            Clean, auditable firmware for **480x320 (3.5") NerdQAxe++ clones**, built
+            from this repo's source (current `main`: upstream `shufps/develop` + the
+            480x320 display and optional W5500 Ethernet support).
+
+            ### Install
+            - **In-app (easiest):** on the miner's web UI → Settings → **Update via GitHub** → pick this release.
+            - **Manual web-UI upload:** upload `esp-miner-NerdQAxe++.bin` (firmware) and `www.bin` (website).
+            - **First-time / USB:** flash `esp-miner-factory-NerdQAxe++-${{ steps.pkg.outputs.tag }}.bin` at `0x0` with esptool/bitaxetool.
+
+            Ethernet is optional — the firmware runs on WiFi with no shield attached.
