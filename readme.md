@@ -47,7 +47,7 @@ Interrupt mode was hardware-tested: wiring **INT → GPIO11** and building with 
 
 ## Building this fork
 
-Uses the repo's Docker toolchain, so you don't need ESP-IDF or Node installed locally (the image also pins the tested ESP-IDF 5.3.3 — note newer 5.3.x currently overflows IRAM on the 480x320 build). **First time only**, build the container:
+Uses the repo's Docker toolchain, so you don't need ESP-IDF or Node installed locally (the image pins the tested ESP-IDF 5.3.3). **First time only**, build the container:
 
 ```bash
 cd docker && ./build_docker.sh && cd ..
@@ -65,25 +65,26 @@ export BIGSCREEN=1          # enables the 480x320 display code
 
 That produces `build/esp-miner.bin` (app) and `build/www.bin` (web UI).
 
-## Flashing
+## Installing & updating
 
-> This fork is **not** on shufps's Webflasher or releases — those don't include the 480x320 build. Flash the binaries you built above.
+Every [Release](https://github.com/AguiMr/nerdqaxe-bigscreen/releases) attaches ready-to-flash binaries (or build your own — see above):
+- `esp-miner-factory-NerdQAxe++-<ver>.bin` — full image, for a first-time USB flash
+- `esp-miner-NerdQAxe++.bin` + `www.bin` — app + web UI, for in-app / OTA updates
 
-**The partition table differs** from a stock NerdQAxePlus2 (app partitions enlarged, `www` shrunk for the larger 480x320 theme assets — see `partitions.csv`), so the **first flash must be over USB serial** — OTA can't repartition the flash. Put the device in bootloader mode with the `boot` button if needed, then either do a full serial flash inside the docker toolchain:
-
-```bash
-./docker/idf-shell.sh
-idf.py -p /dev/ttyACM0 flash        # bootloader + partition table + app + www
-```
-
-or build a single merged image and flash it with `bitaxetool` (copy `config.cvs.example` to `config.cvs` and set your pool/wifi first):
+**First install (coming from the stock/unknown firmware): USB serial.** The partition table differs from a stock NerdQAxePlus2 (app partitions enlarged, `www` shrunk for the 480x320 theme assets — see `partitions.csv`), so the first flash can't be done over the air. Hold the `boot` button to enter bootloader mode, then flash the factory image at `0x0`:
 
 ```bash
-./merge_bin.sh nerdqaxe+.bin
-./docker/bitaxetool.sh --config config.cvs --firmware esp-miner-factory-nerdqaxe+.bin -p /dev/ttyACM0
+esptool.py --chip esp32s3 -p /dev/ttyACM0 write_flash 0x0 esp-miner-factory-NerdQAxe++-<ver>.bin
+# or:  ./docker/bitaxetool.sh --firmware esp-miner-factory-NerdQAxe++-<ver>.bin -p /dev/ttyACM0
 ```
 
-**Updates after the first flash** can go over the web UI (Settings → firmware upload) using this fork's own `build/esp-miner.bin` (and `build/www.bin` for the web UI). OTA preserves your settings (pool, overclock) in NVS.
+(From a self-built tree instead: `idf.py -p /dev/ttyACM0 flash` inside `./docker/idf-shell.sh`, or `./merge_bin.sh nerdqaxe+.bin` to produce your own factory image.)
+
+**Updating once you're already on this firmware — no USB needed:**
+- **In-app (easiest):** web UI → Settings → **Update via GitHub** → pick the latest release. Preserves your settings (pool, overclock) in NVS.
+- **Manual upload:** web UI → firmware upload (`esp-miner-NerdQAxe++.bin`) and website upload (`www.bin`).
+
+> Not on shufps's Webflasher — that only carries upstream builds, not the 480x320 one. Use this repo's own releases.
 
 ## Upstream features
 
