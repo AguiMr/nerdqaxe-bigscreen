@@ -1,24 +1,22 @@
 [![](https://dcbadge.vercel.app/api/server/3E8ca2dkcC)](https://discord.gg/3E8ca2dkcC)
 
-# ESP-Miner-Nerdaxe version
+# Clean firmware for 480x320 NerdQAxe++ clones
 
-| Supported Targets | ESP32-S3              |
-| ----------------- | --------------------- |
-| Required Platform | >= ESP-IDF v5.3.X       |
-| ----------------- | --------------------- |
+Open, auditable firmware for the **480x320 (3.5") NerdQAxe++ clones** sold on AliExpress (by sellers such as YYSlupping, among others). These boards ship with a **preinstalled binary firmware whose source isn't published**, so there's no way to see what it does with your pool credentials, payout address, or hashrate. This repo lets you replace it with a clean build compiled from the open [`shufps/ESP-Miner-NerdQAxePlus`](https://github.com/shufps/ESP-Miner-NerdQAxePlus) source — the same firmware the rest of the NerdQAxe community runs — so you know exactly what's on your miner.
 
-This is a forked version from the NerdAxe miner that was modified for using on the [NerdQAxe+](https://github.com/shufps/qaxe).
+| Supported Targets | ESP32-S3           |
+| ----------------- | ------------------ |
+| Required Platform | >= ESP-IDF v5.3.X  |
 
-Credits to the devs:
+On top of upstream, this fork (branch `lan-480x320`, tracking `shufps`'s `develop`) adds:
+
+1. **480x320 (3.5") display support** — the larger panel these clones ship with, which upstream doesn't support (ported from [brunneis/nerdqaxeplus2-3.5-inches](https://github.com/brunneis/nerdqaxeplus2-3.5-inches); upstream has said they won't support this panel, so it's maintained here).
+2. **Optional W5500 Ethernet** — add a wired connection if you want one, via upstream's own native `Board::hasEthernet()` / `NetworkManager` support (the community-standard SPI pinout is [below](#ethernet-w5500-wiring)). **It's entirely optional — with no Ethernet shield the firmware runs on WiFi, exactly like stock.**
+
+Credits:
 - BitAxe devs on OSMU: @skot/ESP-Miner, @ben and @jhonny
 - NerdAxe dev @BitMaker
-
-## About this fork
-
-This branch (`lan-480x320`) merges two things onto current `shufps/ESP-Miner-NerdQAxePlus` (`develop`) for the **NerdQAxePlus2 with a 480x320 (3.5") screen**:
-
-1. **480x320 display support**, ported from [brunneis/nerdqaxeplus2-3.5-inches](https://github.com/brunneis/nerdqaxeplus2-3.5-inches). Upstream (`shufps`) doesn't support this panel and has said they won't, due to concerns about the Chinese manufacturer of the 480x320 variant — this is a community-maintained addition, not something expected to land upstream.
-2. **W5500 Ethernet**, enabled via upstream's own native `Board::hasEthernet()` / `NetworkManager` infrastructure (originally built for the Q1370/Q1373 boards). No code was pulled in from [CryptoIceMLH/ESP-Miner-NerdQAxePlusLAN](https://github.com/CryptoIceMLH/ESP-Miner-NerdQAxePlusLAN) — upstream's own implementation is more current — but that project's README confirmed the community-standard SPI pinout used below.
+- Upstream NerdQAxe firmware: @shufps
 
 ### Status
 
