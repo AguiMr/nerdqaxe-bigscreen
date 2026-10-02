@@ -8,7 +8,7 @@ Open, auditable firmware for the **480x320 (3.5") NerdQAxe++ clones** sold on Al
 | ----------------- | ------------------ |
 | Required Platform | >= ESP-IDF v5.3.X  |
 
-On top of upstream, this fork (branch `lan-480x320`, tracking `shufps`'s `develop`) adds:
+On top of upstream (tracking `shufps`'s `develop`), this fork adds:
 
 1. **480x320 (3.5") display support** — the larger panel these clones ship with, which upstream doesn't support (ported from [brunneis/nerdqaxeplus2-3.5-inches](https://github.com/brunneis/nerdqaxeplus2-3.5-inches); upstream has said they won't support this panel, so it's maintained here).
 2. **Optional W5500 Ethernet** — add a wired connection if you want one, via upstream's own native `Board::hasEthernet()` / `NetworkManager` support (the community-standard SPI pinout is [below](#ethernet-w5500-wiring)). **It's entirely optional — with no Ethernet shield the firmware runs on WiFi, exactly like stock.**
