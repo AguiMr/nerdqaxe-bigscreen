@@ -1,5 +1,3 @@
-[![](https://dcbadge.vercel.app/api/server/3E8ca2dkcC)](https://discord.gg/3E8ca2dkcC)
-
 # Clean firmware for 480x320 NerdQAxe++ clones
 
 Open, auditable firmware for the **480x320 (3.5") NerdQAxe++ clones** sold on AliExpress (by sellers such as YYSlupping, among others). These boards ship with a **preinstalled binary firmware whose source isn't published**, so there's no way to see what it does with your pool credentials, payout address, or hashrate. This repo lets you replace it with a clean build compiled from the open [`shufps/ESP-Miner-NerdQAxePlus`](https://github.com/shufps/ESP-Miner-NerdQAxePlus) source — the same firmware the rest of the NerdQAxe community runs — so you know exactly what's on your miner.
