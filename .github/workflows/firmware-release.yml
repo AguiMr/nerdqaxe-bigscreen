@@ -6,8 +6,12 @@ name: Firmware release
 #   - esp-miner-NerdQAxe++.bin                (app only; web-UI firmware upload / OTA)
 #   - www.bin                                 (web UI; web-UI website upload / OTA-www)
 #
-# Cut a release by pushing a version tag, e.g.:  git tag v1.1.1 && git push origin v1.1.1
-# A manual run (workflow_dispatch) builds + merges but does NOT publish.
+# Cut a release by pushing a tag named  <upstream-base>-bigscreen.<N>, e.g.:
+#   git tag v1.1.0.1-bigscreen.1      && git push origin v1.1.0.1-bigscreen.1   # Stable -> Latest
+#   git tag v1.1.1-alpha2-bigscreen.1 && git push origin v1.1.1-alpha2-bigscreen.1  # alpha -> Pre-release
+# Latest vs Pre-release is decided automatically from the tag name (alpha/beta/rc
+# -> pre-release). Release notes name the upstream base and link to shufps's notes.
+# A manual run (workflow_dispatch) builds but does NOT publish.
 on:
   push:
     tags:
@@ -60,6 +64,18 @@ jobs:
           case "$GITHUB_REF" in refs/tags/*) ;; *) TAG="dev-$(git rev-parse --short HEAD)";; esac
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
+          # Upstream base = tag minus our "-bigscreen.N" fork suffix.
+          #   v1.1.0.1-bigscreen.1       -> v1.1.0.1
+          #   v1.1.1-alpha2-bigscreen.1  -> v1.1.1-alpha2
+          UPSTREAM_BASE="${TAG%-bigscreen.*}"
+          echo "upstream_base=$UPSTREAM_BASE" >> "$GITHUB_OUTPUT"
+
+          # Channel label for the notes.
+          case "$TAG" in
+            *alpha*|*beta*|*rc*) echo "channel=Pre-release (alpha)" >> "$GITHUB_OUTPUT" ;;
+            *)                   echo "channel=Stable" >> "$GITHUB_OUTPUT" ;;
+          esac
+
           FACTORY="esp-miner-factory-NerdQAxe++-${TAG}.bin"
           esptool.py --chip esp32s3 merge_bin \
             --flash_mode dio --flash_size 16MB --flash_freq 80m \
@@ -84,19 +100,27 @@ jobs:
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
           make_latest: ${{ (contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc')) && 'false' || 'true' }}
           fail_on_unmatched_files: true
+          # Appends GitHub's auto commit/PR changelog (since the previous tag)
+          # below our own notes.
+          generate_release_notes: true
           files: |
             esp-miner-factory-NerdQAxe++-${{ steps.pkg.outputs.tag }}.bin
             esp-miner-NerdQAxe++.bin
             www.bin
           body: |
-            Clean, auditable firmware for **480x320 (3.5") NerdQAxe++ clones**, built
-            from this repo's source: an upstream `shufps/ESP-Miner-NerdQAxePlus`
-            release base (identified in the tag) plus the 480x320 display and
-            optional W5500 Ethernet support.
+            **Channel:** ${{ steps.pkg.outputs.channel }}
+            **Upstream base:** [`${{ steps.pkg.outputs.upstream_base }}`](https://github.com/shufps/ESP-Miner-NerdQAxePlus/releases/tag/${{ steps.pkg.outputs.upstream_base }}) — see upstream's own notes for everything in the base firmware.
+
+            Clean, auditable firmware for **480x320 (3.5") NerdQAxe++ clones**: the
+            upstream `shufps/ESP-Miner-NerdQAxePlus` release above, plus this fork's
+            additions.
+
+            ### What this fork adds on top of the upstream base
+            - **480x320 (3.5") display support** (`BIGSCREEN` build, ported from brunneis) — upstream doesn't support this panel.
+            - **Optional W5500 Ethernet** via upstream's native `NetworkManager` (4 wires: MOSI 12 / MISO 16 / SCLK 2 / CS 21). Optional — the firmware runs on WiFi with no shield attached.
+            - Enlarged app partitions + shrunk `www` to fit the larger theme assets (**first flash must be over USB**, not OTA).
 
             ### Install
             - **In-app (easiest):** on the miner's web UI → Settings → **Update via GitHub** → pick this release.
             - **Manual web-UI upload:** upload `esp-miner-NerdQAxe++.bin` (firmware) and `www.bin` (website).
             - **First-time / USB:** flash `esp-miner-factory-NerdQAxe++-${{ steps.pkg.outputs.tag }}.bin` at `0x0` with esptool/bitaxetool.
-
-            Ethernet is optional — the firmware runs on WiFi with no shield attached.
