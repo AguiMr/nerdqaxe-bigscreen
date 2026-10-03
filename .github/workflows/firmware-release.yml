@@ -78,6 +78,11 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          # Pre-release line (mirrors shufps): tags with alpha/beta/rc are
+          # pre-releases and never "Latest"; clean version tags are the stable
+          # "Latest" release.
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+          make_latest: ${{ (contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc')) && 'false' || 'true' }}
           fail_on_unmatched_files: true
           files: |
             esp-miner-factory-NerdQAxe++-${{ steps.pkg.outputs.tag }}.bin
@@ -85,8 +90,9 @@ jobs:
             www.bin
           body: |
             Clean, auditable firmware for **480x320 (3.5") NerdQAxe++ clones**, built
-            from this repo's source (current `main`: upstream `shufps/develop` + the
-            480x320 display and optional W5500 Ethernet support).
+            from this repo's source: an upstream `shufps/ESP-Miner-NerdQAxePlus`
+            release base (identified in the tag) plus the 480x320 display and
+            optional W5500 Ethernet support.
 
             ### Install
             - **In-app (easiest):** on the miner's web UI → Settings → **Update via GitHub** → pick this release.
