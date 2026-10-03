@@ -47,7 +47,7 @@ Interrupt mode was hardware-tested: wiring **INT → GPIO11** and building with 
 
 ## Building this fork
 
-Uses the repo's Docker toolchain, so you don't need ESP-IDF or Node installed locally (the image pins the tested ESP-IDF 5.3.3). **First time only**, build the container:
+Uses the repo's Docker toolchain, so you don't need ESP-IDF or Node installed locally (the image pins the tested ESP-IDF 5.3.6). **First time only**, build the container:
 
 ```bash
 cd docker && ./build_docker.sh && cd ..

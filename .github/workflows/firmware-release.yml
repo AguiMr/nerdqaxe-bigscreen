@@ -25,7 +25,7 @@ jobs:
   release:
     name: Build & publish (NerdQAxe++ / 480x320)
     runs-on: ubuntu-latest
-    container: espressif/idf:v5.3.3
+    container: espressif/idf:v5.3.6
     steps:
       - name: Checkout (full history for git-describe version)
         uses: actions/checkout@v4
