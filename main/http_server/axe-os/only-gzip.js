@@ -3,24 +3,20 @@ const path = require('path');
 
 const directory = './dist/axe-os';
 
-fs.readdir(directory, (err, files) => {
-    if (err) throw err;
+// The firmware only ever serves the precompressed ".gz" variant (handler_file.cpp
+// appends ".gz" to every path), so drop every uncompressed file, including the
+// ones in subdirectories like assets/ - they would only waste SPIFFS space.
+function removeUncompressed(dir) {
+    for (const file of fs.readdirSync(dir)) {
+        const filePath = path.join(dir, file);
 
-    for (const file of files) {
-        const filePath = path.join(directory, file);
-
-        fs.stat(filePath, (err, stats) => {
-            if (err) throw err;
-
-            if (stats.isDirectory()) {
-                // NOP
-            } else if (!file.endsWith('.gz')) {
-                // If it's a file and doesn't end with .gz, unlink it
-                fs.unlink(filePath, (err) => {
-                    if (err) throw err;
-                    console.log(`Removed file: ${filePath}`);
-                });
-            }
-        });
+        if (fs.statSync(filePath).isDirectory()) {
+            removeUncompressed(filePath);
+        } else if (!file.endsWith('.gz')) {
+            fs.unlinkSync(filePath);
+            console.log(`Removed file: ${filePath}`);
+        }
     }
-});
+}
+
+removeUncompressed(directory);
