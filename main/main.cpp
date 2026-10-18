@@ -14,6 +14,7 @@
 #include "boards/board.h"
 #include "boards/nerdaxe.h"
 #include "boards/nerdaxegamma.h"
+#include "boards/nerdaxegaia.h"
 #include "boards/nerdeko.h"
 #include "boards/nerdhaxegamma.h"
 #include "boards/nerdoctaxegamma.h"
@@ -256,6 +257,9 @@ extern "C" void app_main(void)
 #ifdef NERDAXEGAMMA
     Board *board = new NerdaxeGamma();
 #endif
+#ifdef NERDAXEGAIA
+    Board *board = new NerdaxeGaia();
+#endif
 #ifdef NERDHAXEGAMMA
     Board *board = new NerdHaxeGamma();
 #endif
@@ -275,7 +279,10 @@ extern "C" void app_main(void)
     // initialize everything non-asic-specific like
     // fan and serial and load settings from nvs
     if (board->hasEthernet()) {
-        NETWORK.setEthResetPin((gpio_num_t) board->getEthResetPin());
+        const EthPins *ep = board->getEthPins();
+        if (ep) {
+            NETWORK.setEthPins(ep->sclk, ep->mosi, ep->miso, ep->cs, ep->rst, ep->irq);
+        }
         NETWORK.earlyEthSpiInit();
     }
 
