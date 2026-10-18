@@ -50,9 +50,9 @@ Only 4 signal wires needed, matching the community-standard pinout from CryptoIc
 
 *The W5500 module is drawn on top for reference only; it actually mounts on the opposite side of the board. The 12-pin pass-through header is where the NerdQAxe++ (ESP32) plugs in; the W5500 sits on the 5-pin headers.*
 
-By default INT and RST aren't used — the driver polls, and these W5500 breakout modules reset themselves on power-up. (The firmware pulses GPIO4 as a no-op reset attempt on boot; harmless if unconnected, and overridable via `NerdQaxePlus2::getEthResetPin()`.)
+By default INT and RST aren't used — the driver polls, and resets the W5500 over SPI on boot. (The pin map lives in `NerdQaxePlus2::getEthPins()`.)
 
-Interrupt mode was hardware-tested: wiring **INT → GPIO11** and building with `W5500_USE_INT=1` works and boots cleanly. The shipped build still polls, though — on a hand-wired add-on shield the interrupt line picks up enough noise to perform *worse* than polling (higher latency/jitter), and the difference doesn't affect mining either way.
+Interrupt mode was hardware-tested (wiring **INT → GPIO11**) and boots cleanly; to use it, set `.irq = GPIO_NUM_11` in `getEthPins()`. The shipped build still polls, though — on a hand-wired add-on shield the interrupt line picks up enough noise to perform *worse* than polling (higher latency/jitter), and the difference doesn't affect mining either way.
 
 ## Building this fork
 
