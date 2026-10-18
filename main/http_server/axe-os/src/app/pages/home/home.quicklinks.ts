@@ -183,6 +183,13 @@ const POOLS: PoolMeta[] = [
     match: (h) => isLocalHost(h),
     iconUrl: DEFAULT_POOL_ICON_URL,
   },
+  {
+    id: 'bitronics',
+    name: 'Bitronics',
+    match: (h) => h.includes('pool.bitronics.store'),
+    quickLink: (a) => `https://pool.bitronics.store/stats/${a}`,
+    iconUrl: 'assets/pools/bitronics.svg',
+  },
 
   {
     id: 'public-pool',
@@ -190,7 +197,6 @@ const POOLS: PoolMeta[] = [
     match: (h) => h.includes('public-pool.io'),
     quickLink: (a) => `https://web.public-pool.io/#/app/${a}`,
     iconUrl: 'assets/pools/public-pool.png',
-    caps: { ping: false },
   },
   {
     id: 'ocean',

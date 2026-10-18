@@ -1,6 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { ModuleWithProviders, NgModule } from "@angular/core";
 import { CORPORATE_THEME } from "./styles/theme.corporate";
+import { GAIA_THEME } from "./styles/theme.gaia";
 import {
     NbActionsModule,
     NbLayoutModule,
@@ -15,6 +16,7 @@ import {
     NbThemeModule,
     NbCardModule,
     NbAlertModule,
+    NbCheckboxModule,
   } from '@nebular/theme';
 import { NbSecurityModule } from "@nebular/security";
 import { NbEvaIconsModule } from "@nebular/eva-icons";
@@ -68,6 +70,7 @@ const NB_MODULES : any= [
     NbSidebarModule,
     NbContextMenuModule,
     NbAlertModule,
+    NbCheckboxModule,
     NbCardModule,
     NbSecurityModule,
     NbButtonModule,
@@ -119,7 +122,7 @@ const PIPES = [
             {
               name: 'cosmic',
             },
-            [ CORPORATE_THEME ],
+            [ CORPORATE_THEME, GAIA_THEME ],
           ).providers || [],
         ],
       };

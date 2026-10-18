@@ -12,6 +12,18 @@
 static const char* TAG="nerdqaxeplus2";
 static constexpr uint16_t FAN_MODE_PID = 2;
 
+// W5500 LAN add-on: community-standard pinout (MOSI 12 / MISO 16 / SCLK 2 / CS 21).
+// RST and INT are left unwired, so: no GPIO reset (the driver does a software
+// reset over SPI) and polling instead of interrupts. GPIO13 (driver default RST)
+// is LDO_EN on this board and must not be driven.
+static const EthPins kEthPins = { .sclk = GPIO_NUM_2, .mosi = GPIO_NUM_12, .miso = GPIO_NUM_16,
+                                  .cs = GPIO_NUM_21, .rst = GPIO_NUM_NC, .irq = GPIO_NUM_NC };
+
+const EthPins *NerdQaxePlus2::getEthPins()
+{
+    return &kEthPins;
+}
+
 NerdQaxePlus2::NerdQaxePlus2() : NerdQaxePlus() {
     m_deviceModel = "NerdQAxe++";
     m_miningAgent = m_deviceModel;
