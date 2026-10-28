@@ -2,8 +2,7 @@ name: Firmware build
 
 # Compile-checks the firmware so pull requests (including the automated
 # upstream-sync PRs) get a green/red before anyone merges or flashes.
-# Builds BOTH screen variants this fork ships: 480x320 (BIGSCREEN=1) and the
-# stock 320x170 (BIGSCREEN=0).
+# Builds the 480x320 (BIGSCREEN=1) variant, the only one this fork ships.
 #
 # The firmware bundles the Angular web UI (axe-os) into www.bin, and dist/ is
 # gitignored, so the web UI must be built (npm) before idf.py build.
@@ -26,7 +25,6 @@ jobs:
       matrix:
         include:
           - { name: "480x320", bigscreen: "1" }
-          - { name: "320x170", bigscreen: "0" }
     steps:
       - name: Checkout (with submodules)
         uses: actions/checkout@v4

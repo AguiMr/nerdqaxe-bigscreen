@@ -1,13 +1,14 @@
 name: Firmware release
 
-# Builds BOTH screen variants and publishes a GitHub Release whose assets match
-# what the in-app "Update via GitHub" expects (and the manual web-UI upload).
-# Per variant <size> in {480x320, 320x170}:
-#   - esp-miner-factory-NerdQAxe++-<size>-<tag>.bin  (full 0x0 image; updater + USB)
-#   - esp-miner-NerdQAxe++-<size>.bin                (app only; web-UI upload / OTA)
-# Plus un-sized 480x320 aliases (esp-miner-factory-NerdQAxe++-<tag>.bin and
+# Builds the 480x320 variant and publishes a GitHub Release whose assets match
+# what the in-app "Update via GitHub" expects (and the manual web-UI upload):
+#   - esp-miner-factory-NerdQAxe++-480x320-<tag>.bin  (full 0x0 image; updater + USB)
+#   - esp-miner-NerdQAxe++-480x320.bin                (app only; web-UI upload / OTA)
+# Plus un-sized aliases (esp-miner-factory-NerdQAxe++-<tag>.bin and
 # esp-miner-NerdQAxe++.bin) so pre-existing big-screen installs keep updating,
-# and one shared www.bin (identical for both variants).
+# and www.bin. 320x170 builds are no longer published (stock-screen units should
+# run upstream, which has W5500 ethernet since #731); with no -320x170 assets,
+# the updater on a 320x170 unit simply won't offer these releases.
 #
 # Cut a release by pushing a tag named  <upstream-base>-ethernet.<N>, e.g.:
 #   git tag v1.1.0.1-ethernet.1      && git push origin v1.1.0.1-ethernet.1   # Stable -> Latest
@@ -47,7 +48,7 @@ jobs:
           npm ci
           npm run build
 
-      - name: Build & package both screen variants
+      - name: Build & package the 480x320 variant
         id: pkg
         shell: bash
         run: |
@@ -91,8 +92,6 @@ jobs:
             cp build/esp-miner.bin "esp-miner-NerdQAxe++-${disp}.bin"
           }
 
-          # 480x320 (big screen) first; www.bin is identical for both variants
-          # (the web UI carries no display assets), so grab it here and share it.
           build_variant 1 480x320
           cp build/www.bin www.bin
 
@@ -101,9 +100,6 @@ jobs:
           # until those devices have updated to a display-aware build.
           cp "esp-miner-factory-NerdQAxe++-480x320-${TAG}.bin" "esp-miner-factory-NerdQAxe++-${TAG}.bin"
           cp "esp-miner-NerdQAxe++-480x320.bin"                "esp-miner-NerdQAxe++.bin"
-
-          # 320x170 (standard screen)
-          build_variant 0 320x170
 
           ls -la esp-miner-factory-* esp-miner-NerdQAxe++*.bin www.bin
 
@@ -122,37 +118,28 @@ jobs:
           generate_release_notes: true
           files: |
             esp-miner-factory-NerdQAxe++-480x320-${{ steps.pkg.outputs.tag }}.bin
-            esp-miner-factory-NerdQAxe++-320x170-${{ steps.pkg.outputs.tag }}.bin
             esp-miner-factory-NerdQAxe++-${{ steps.pkg.outputs.tag }}.bin
             esp-miner-NerdQAxe++-480x320.bin
-            esp-miner-NerdQAxe++-320x170.bin
             esp-miner-NerdQAxe++.bin
             www.bin
           body: |
             **Channel:** ${{ steps.pkg.outputs.channel }}
             **Upstream base:** [`${{ steps.pkg.outputs.upstream_base }}`](https://github.com/shufps/ESP-Miner-NerdQAxePlus/releases/tag/${{ steps.pkg.outputs.upstream_base }}) — see upstream's own notes for everything in the base firmware.
 
-            Clean, auditable W5500-Ethernet firmware for the **NerdQAxe++**, in two
-            builds — one per screen. It's the upstream `shufps/ESP-Miner-NerdQAxePlus`
-            release above, plus this fork's additions.
+            Clean, auditable firmware for the **NerdQAxe++ with the 480×320 (3.5") screen**.
+            It's the upstream `shufps/ESP-Miner-NerdQAxePlus` release above, plus 480×320
+            screen support. **Stock 320×170 screen? Use upstream's release instead** — it
+            already includes W5500 Ethernet.
 
-            ### Pick your screen
-            | Your screen | In-app updater picks it automatically | Manual / USB file |
-            |---|---|---|
-            | **480×320** (3.5") | yes | `…-480x320-…` |
-            | **320×170** (1.9", stock) | yes | `…-320x170-…` |
-
-            The in-app updater reads the panel size from the device, so it installs the
-            right one on its own. (The un-sized `esp-miner-factory-NerdQAxe++-<tag>.bin`
-            / `esp-miner-NerdQAxe++.bin` are **480×320 aliases** kept so older big-screen
-            installs keep updating — new installs should use the sized files.)
+            (The un-sized `esp-miner-factory-NerdQAxe++-<tag>.bin` / `esp-miner-NerdQAxe++.bin`
+            are the same 480×320 build, kept so older installs keep updating.)
 
             ### What this fork adds on top of the upstream base
-            - **Two screen variants from one source:** upstream's **320×170** panel plus **480×320 (3.5")** support (`BIGSCREEN` build, ported from brunneis).
-            - **Optional W5500 Ethernet** via upstream's native `NetworkManager` (4 wires: MOSI 12 / MISO 16 / SCLK 2 / CS 21). Optional — the firmware runs on WiFi with no shield attached.
+            - **480×320 (3.5") screen support** (`BIGSCREEN` build, ported from brunneis).
             - Enlarged app partitions to fit the theme assets (**first flash must be over USB**, not OTA).
+            - Optional W5500 Ethernet comes from upstream (4 wires: MOSI 12 / MISO 16 / SCLK 2 / CS 21).
 
             ### Install
-            - **In-app (easiest):** on the miner's web UI → Settings → **Update via GitHub** → pick this release. It auto-selects the build for your screen.
-            - **Manual web-UI upload:** upload the `esp-miner-NerdQAxe++-<size>.bin` matching your screen (firmware) and `www.bin` (website).
-            - **First-time / USB:** flash `esp-miner-factory-NerdQAxe++-<size>-${{ steps.pkg.outputs.tag }}.bin` at `0x0` with esptool/bitaxetool.
+            - **In-app (easiest):** on the miner's web UI → Settings → **Update via GitHub** → pick this release.
+            - **Manual web-UI upload:** upload `esp-miner-NerdQAxe++-480x320.bin` (firmware) and `www.bin` (website).
+            - **First-time / USB:** flash `esp-miner-factory-NerdQAxe++-480x320-${{ steps.pkg.outputs.tag }}.bin` at `0x0` with esptool/bitaxetool.
