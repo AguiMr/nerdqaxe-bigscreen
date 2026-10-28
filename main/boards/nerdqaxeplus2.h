@@ -21,10 +21,4 @@ class NerdQaxePlus2 : public NerdQaxePlus {
     bool setVoltage(float core_voltage) override;
     float getTemperature(int index);
     void requestChipTemps() override;
-
-    // Optional W5500 add-on (LAN), always polled / RC-reset (see README).
-    bool hasEthernet() override {
-        return true;
-    }
-    const EthPins *getEthPins() override;
 };
